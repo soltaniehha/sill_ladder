@@ -1,4 +1,4 @@
-sill_ladder
+Spin Incoherent Luttinger Liquid Ladders
 ===========
 
 Class of variational Ansa ̈tze for the spin-incoherent ground state of a Luttinger liquid
