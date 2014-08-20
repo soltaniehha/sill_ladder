@@ -1,0 +1,94 @@
+		    C/C++ header files for LAPACK
+
+The following header files were created by a mostly-automatic perl
+script that extracted information from the LAPACK Fortran source files
+and used the information to create prototypes for C/C++.  I then had
+to fix up many of the headers by hand.  The perl script is included
+and is called `lapack2c++'.
+
+Calling Fortran from C or C++ is a highly system-dependent process.
+In 90 percent of cases, it is straightforward, but the C and Fortran
+standards are vague enough that it is almost impossible to come up
+with a solution guaranteed to work in every case.  For example, the
+size of C types is not specified by the standard, C needn't store
+complex numbers contiguously in memory, the convention for passing
+string arguments to Fortran is not standardized, and the convention
+for returning structures to C is not uniform.  See
+http://home.sol.no/~arnholm/cppf77.htm for more details.
+
+Instead of trying to cover every situation, I have simply made header
+files that work for my system.  Even if they don't work for yours, it
+shouldn't be too difficult to tweak them so that they do.
+Alternatively, get in contact with me and maybe I will be willing to
+help by translating the Fortran header files again with a different
+convention or using more typedefs.
+
+The principle assumptions made here:
+
+1. Fortran names, as seen from C/C++, are lower case and end with an
+   underscore, so that for example the Fortran routine `CGBSV' is
+   called from C as `cgbsv_'.  This is a common but not universal
+   convention.
+
+2. C complex types are stored contiguously.  complex_float is assumed
+   to be a struct with a real and imaginary parts stored as floats,
+   and complex_double a struct with real and imaginary parts stored as
+   doubles.  For C++ I use the new templated complex types,
+   `complex<float>' and `complex<double>'.  It is also assumed that C
+   and Fortran functions return their results the same way, even if
+   the results are structs like complex numbers.
+
+3. The C/Fortran types correspond as follows:
+       float = REAL*4
+       double = REAL*8
+       int = INTEGER*4
+       complex_float or complex<float> = COMPLEX*8
+       complex_double or complex<double> = COMPLEX*16
+
+4. CHARACTER*(*) arrays are passed as a pointer to the first character
+   plus an additional hidden argument tacked on to the end of the
+   argument list length holding the number of characters.  I have used
+   the type `ftnlen' for the length argument; on my system `ftnlen' is
+   typedefed to `short' (two bytes).
+
+There may be other assumptions but those are the main ones.
+
+The prototypes try to get `const' correct for the parameters, based on
+whether the Fortran variable is `input' or `output' or `input/output'.
+
+Each file contains a C and a C++ prototype for the LAPACK routine of
+the same name.  Whether to use the C or the C++ version is determined
+from the preprocessor macro `__cplusplus'.  (This macro should be
+automatically defined by C++ compilers and undefined by C compilers.)
+
+In Fortran, everything is passed by reference.  In C, arguments must
+therefore be passed to the Fortran routine as pointers to the actual
+values arguments.  C++, on the other hand, has references, so scalars
+are passed from C++ to Fortran by reference.  Accordingly the C and
+C++ prototypes are incompatible with one another.  This is
+unfortunate, but for me the advantages of using references in C++
+outweighed the disadvantage of the incompatibility with C.  In any
+case if you have the option you should switch from C to C++ because
+C++ is so much nicer for scientific work.
+
+In both C and C++, arrays and matrices are passed to Fortran by
+passing a pointer to their 0th element.  Fortran stores matrices in
+memory in the opposite order of C/C++, so if you are using builtin
+C/C++ arrays, you will have to reverse the indices.  Also, Fortran
+indices start counting with 1, not 0 as in C/C++.  (Of course the
+matrix sizes are unchanged; an MxN Fortran matrix is an NxM C/C++
+matrix, not (N-1)x(M-1).)  You'll have to take care of these
+matrix-ordering and index-offset problems yourself.
+
+    Example:  M(5,2) <-> M[1][4]
+
+You will also have to figure out what Fortran libraries you have to
+link into your C/C++ program; usually besides the library containing
+LAPACK itself, you will have to include a separate one containing
+BLAS, followed by additional general Fortran libraries.  On unix, one
+way to locate the files you need is to look for the unresolved symbols
+in the library files available using the unix tool nm(1).
+
+Michael Haggerty
+<mhagger@blizzard.harvard.edu>
+16-Oct-1998
