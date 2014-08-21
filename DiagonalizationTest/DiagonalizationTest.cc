@@ -23,7 +23,7 @@ int main()
     clock_t start, end;
     start = clock();
 	int dim = 3;
-	Matrix<double> H(dim,dim);
+	Matrix<double> H(dim,dim); // Our test 3 by 3 symmetric Hamiltonian H.
 	H(0,0)=1 ;H(0,1)=0 ;H(0,2)=2 ;
 	H(1,0)=0 ;H(1,1)=-4 ;H(1,2)=0 ;
 	H(2,0)=2 ;H(2,1)=0 ;H(2,2)=-1 ;
@@ -80,8 +80,9 @@ void Diagonalize(int dim, Matrix<double> mat, Matrix<double> &evect, Vector<doub
 		eval(i) = vals(i);
 	}
 	
-	double temp;
+	// Sorting the eigenstates and eigenenergies in an increasing order!
 	
+	double temp;
 	for (j = 0; j < dim; j++)
 		for (i = 0; i < dim-1; i++)
 			if (eval(i) > eval(i+1)) {
