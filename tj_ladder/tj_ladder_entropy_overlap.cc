@@ -6,7 +6,6 @@
 #include <math.h>
 #include <dmtk/vector.h>
 #include <dmtk/matrix.h>
-#include <LAPACK/dsyev.h>
 
 #define IBITS(n,i) (((n) & 1 << i) >> i)
 #define IBSET(n,i) ((n) | (1<<i))
@@ -43,7 +42,7 @@ class state {
 };
 
 int main() {
-	double J, Jmax, Jmin, Jstep, t, GS_Energy_Spinless, g;
+	double J, Jmax, Jmin, Jstep, t, g;
 	int L, Nsinglet; // Nsinglet = Ndown
 	int dim = 0;
 	
@@ -51,13 +50,13 @@ int main() {
 	cin >> L;
 	cout << "Nsinglet = ";
 	cin >> Nsinglet;
-	cout << "Enter amount of t: ";
+	cout << "t: ";
 	cin >> t;
-	cout << "Enter amount of j_min: ";
+	cout << "j_min: ";
 	cin >> Jmin;
-	cout << "Enter amount of j_max: ";
+	cout << "j_max: ";
 	cin >> Jmax;
-	cout << "Enter amount of j_step: ";
+	cout << "j_step: ";
 	cin >> Jstep;
 	
 	char file_name[255];
@@ -86,9 +85,11 @@ int main() {
 	// ChargePart (Spinless Fermions)
 	
 	int dim_charge = factorial(L)/factorial(Nsinglet)/factorial(L-Nsinglet);
-	Matrix<double> EigVe_charge(dim_charge, dim_charge);
+	Matrix<double> EigVec_charge(dim_charge, dim_charge);
 	Vector<int> basis_charge(dim_charge);
-	ChargePart(t, L, Nsinglet, EigVe_charge, basis_charge, GS_Energy_Spinless);
+	double GS_Energy_Spinless;
+	ChargePart(t, L, Nsinglet, EigVec_charge, basis_charge, GS_Energy_Spinless);
+	
 	///////////////////////////////////////////////////
 	
 	Vector<state> basis;
@@ -126,8 +127,8 @@ int main() {
 	dmtk::Matrix<double> S;
 	S.resize(dim,dim);
 	Matrix<double> H(dim,dim);
-	Matrix<double> EigVe1(dim,dim);
-	Vector<double> eigen1(dim);
+	Matrix<double> EigVec(dim,dim);
+	Vector<double> energy(dim);
 	
 	// Hopping part (Charge lattice)
 	
@@ -254,7 +255,7 @@ int main() {
 			Jstep = 10;
 		// Diagonal Elements
 		
-		for (int col = 0; col < dim; col++) { // sum over all the states
+		for (int col = 0; col < dim; col++) { // loop over all the states
 			H(col,col) = 0;
 			for ( int site = 0; site < L; site++) {
 				if ( IBITS(basis[col].up,site) && IBITS(basis[col].up,site+L) == 1) {H(col,col) += J/4;}
@@ -267,7 +268,7 @@ int main() {
 		// Off-Diagonal Terms
 		int a = 0;
 		//Fliping part
-		for (int col = 0; col < dim; col++) { // sum over all the states
+		for (int col = 0; col < dim; col++) { // loop over all the states
 			for ( int site = 0; site < L; site++) {
 				if (IBITS(basis[col].up,site) && IBITS(basis[col].dn,site+L) == 1 || IBITS(basis[col].dn,site) && IBITS(basis[col].up,site+L) == 1) {
 					int mask = IBSET (0,site) | IBSET(0,site+L);
@@ -305,29 +306,21 @@ int main() {
 		start = clock();
 		cout << "\n\t\t ***** Diagonalizing the Hamiltonian " << dim << " X " << dim << " *****\n\n";
 		
-		// solve the generalized eigenvalue problem
+		// solve the eigenvalue problem
 		
-		Diagonalize(dim,H,EigVe1,eigen1);
-		dmtk::Vector<double> w(dim); //eigenvalues
-		dmtk::Vector<double> aux(3*dim); // auxiliary "work" array for lapack
-		int info;
-		dsygv_(1, 'V', 'U', 
-			   H.rows(), H.array(), H.rows(), 
-			   S.array(), S.rows(), 
-			   w.array(), aux.array(), 3*dim, 
-			   info);
+		Diagonalize(dim,H,EigVec,energy);
 		
 		end = clock();
 		cout << "***** Diagonalizing the Hamiltonian " << dim << " X " << dim << " is complete, and it took " << (double)(end-start)/CLOCKS_PER_SEC << " seconds! *****" << endl;
 		
-		Eout << "G.S. Energy for Jk= "<< J << "	" << eigen1(0) << endl;//+ 3./4. * J * Nsinglet << endl; // ESpinless = ESpinfull + 3/4 * Jk * NSinglet
+		Eout << "G.S. Energy for Jk= "<< J << "	" << energy(0) << endl;//+ 3./4. * J * Nsinglet << endl; // ESpinless = ESpinfull + 3/4 * Jk * NSinglet
 		
 		if (J == Jmin || J == Jmax-Jstep) {
 			cout << endl << "*******************************************************" << endl;
 			cout << "First 10 energies of the spinfull system for Jk=" << J << endl;
 			cout << "*******************************************************" << endl;
 			for (int i = 0; i < 10; i++)
-				cout << "Energy of state_" << i << ":	" << eigen1(i) << endl;
+				cout << "Energy of state_" << i << ":	" << energy(i) << endl;
 		}
 		
 		// Overlap with the Singlet theory
@@ -368,9 +361,9 @@ int main() {
 			for (int bit = 0; bit < L; bit++)
 				Ndn_ch += IBITS(basis[n].dn,bit);
 			
-			g = EigVe_charge(0,d_ch) * EigVe_charge(0,d_i) * factorial(Ndn_ch) * factorial(Nsinglet-Ndn_ch) * pow(-1.,(Ndn_ch));
+			g = EigVec_charge(0,d_ch) * EigVec_charge(0,d_i) * factorial(Ndn_ch) * factorial(Nsinglet-Ndn_ch) * pow(-1.,(Ndn_ch));
 			
-			Overlap += EigVe1(0,n) * g;
+			Overlap += EigVec(0,n) * g;
 			C += g * g;
 		}
 		Overlap = Overlap / sqrt(C);
@@ -387,7 +380,7 @@ int main() {
 				Bout << IBITS(basis[i].up,bit)+2*IBITS(basis[i].dn,bit);
 				if (bit == L-1) Bout << endl;
 			}
-			Bout << "	Coefficient: " << EigVe1(0,i) << endl;
+			Bout << "	Coefficient: " << EigVec(0,i) << endl;
 		}
 		
 		// Overlap Between G.S. of Exact Diagonalization and G.S. of the Vertical Singlet
@@ -425,9 +418,9 @@ int main() {
 				for (int bit = 0; bit < L; bit++)
 					Ndn_ch += IBITS(basis[n].dn,bit);
 				
-				g = EigVe_charge(0,d_ch) * pow(-1.,Ndn_ch);
+				g = EigVec_charge(0,d_ch) * pow(-1.,Ndn_ch);
 				
-				OverlapVS += EigVe1(0,n) * g;
+				OverlapVS += EigVec(0,n) * g;
 				C += pow(g,2);
 			}
 		}
@@ -487,7 +480,7 @@ int main() {
 				if(state1b == state2b) {
 					int i2 = 0;
 					for(int k = 0; k < d0; k++) { if(state2a == basis2(k)) { i2 = k; break; }}
-					rho(i1,i2) += EigVe1(0,i)*EigVe1(0,j);
+					rho(i1,i2) += EigVec(0,i)*EigVec(0,j);
 				}
 			}
 		}
@@ -513,26 +506,49 @@ int main() {
 }
 
 
-// For more info about DSYEV go to http://www.netlib.org/lapack/explore-html/d2/d8a/group__double_s_yeigen.html#ga80bb116b6dacd91ef3241373469dd7f8
-//=============================================================================
-//diagonalize a symmetric matrix -- eigenvalues and eigenvectors
+//diagonalize a symmetric matrix -- gives eigenvalues and eigenvectors using LAPACK library dsyev.
 void Diagonalize(int dim, Matrix<double> mat, Matrix<double> &evect, Vector<double> &eval)
 {
-	int n;n=dim;
-	Vector<double> work(4*dim); int info;
-	Vector<double> vals(dim); Matrix<double> mts(dim,dim);
-	for(int i1=0;i1<n;i1++){for(int j1=0;j1<n;j1++){
-		mts(j1,i1) = mat(j1,i1); }}
+	char jobz = 'V'; // V/N indicates that eigenvectors should/should not be calculated. 
+	char uplo = 'U'; // U/L indicated that the upper/lower triangle of the symmetric matrix is stored. 
+	Matrix<double> mts(dim,dim);
+	int i, j, k;
+	for (i = 0; i < dim; i++){
+		for (j = 0; j < dim; j++){
+			mts(j,i) = mat(j,i); 
+		}
+	}
+	Vector<double> vals(dim); 
+	int lwork = 3*dim-1;
+	Vector<double> work(lwork); 
+	DMTK_int info;
 	
-	//cout << " Hamiltonian Dimension: " << dim << " --- " << mat.rows() << endl;
+	cout << " Hamiltonian Dimension: " << dim << " --- " << mat.rows() << endl;
 	
-	dsyev_('V','U',n,mts.array(),n,vals.array(),work.array(),work.size(),info);
+	dsyev_(jobz, uplo, dim, mts.array(), dim, vals.array(), work.array(), lwork, info);
 	
-	for(int i1=0;i1<n;i1++){for(int j1=0;j1<n;j1++){
-		evect(i1,j1) = mts(i1,j1);}
-		eval(i1) = vals(i1);}
+	for (i = 0; i < dim; i++) {
+		for(j = 0; j < dim; j++)
+			evect(i,j) = mts(i,j);
+		eval(i) = vals(i);
+	}
 	
-	//cout << " Diagonalization info " << info << " ************ " << endl;
+	// Sorting the eigenstates and eigenenergies in an increasing order!
+	
+	double temp;
+	for (j = 0; j < dim; j++)
+		for (i = 0; i < dim-1; i++)
+			if (eval(i) > eval(i+1)) {
+				temp = eval(i); eval(i) = eval(i+1); eval(i+1) = temp;
+				
+				for (k = 0; k < dim; k++) {
+					temp = evect(i,k);
+					evect(i,k) = evect(i+1,k);
+					evect(i+1,k) = temp;
+	      }
+	    }
+		
+	cout << " Diagonalization info " << info << " ************ " << endl << endl;
 	
 	
 } //End Diagonalization
@@ -546,7 +562,7 @@ unsigned factorial(unsigned n) {
         return n * factorial(n - 1);
 }
 
-void ChargePart(double t, int L, int Nsinglet, Matrix<double> &EigVe_charge, Vector<int> &basis, double &GS_Energy_Spinless) {
+void ChargePart(double t, int L, int Nsinglet, Matrix<double> &EigVec_charge, Vector<int> &basis, double &GS_Energy_Spinless) {
 	int MAXdim = pow(2.,L);
 	int dim_charge=0;
 
@@ -606,19 +622,11 @@ void ChargePart(double t, int L, int Nsinglet, Matrix<double> &EigVe_charge, Vec
 	
 	dmtk::Matrix<double> S_charge;
 	S_charge.resize(dim_charge,dim_charge);
-	EigVe_charge.resize(dim_charge, dim_charge);
+	EigVec_charge.resize(dim_charge, dim_charge);
 	Vector<double> eigEn_charge(dim_charge);
 	
-	Diagonalize(dim_charge, H_charge, EigVe_charge, eigEn_charge);
+	Diagonalize(dim_charge, H_charge, EigVec_charge, eigEn_charge);
 					 
-	dmtk::Vector<double> w(dim_charge); // eigenvalues
-	dmtk::Vector<double> aux(3*dim_charge); // auxiliary "work" array for lapack
-	int info;
-		dsygv_(1, 'V', 'U', 
-		H_charge.rows(), H_charge.array(), H_charge.rows(), 
-		S_charge.array(), S_charge.rows(), 
-		w.array(), aux.array(), 3*dim_charge, 
-		info);
 	// Energy
 	
 	cout << endl << "*** Hamiltonian of the Spinless Fermions ***" << endl << endl; 
@@ -637,5 +645,5 @@ void ChargePart(double t, int L, int Nsinglet, Matrix<double> &EigVe_charge, Vec
 	cout << endl << "***** Ground_State of the spinless fermions *****" << endl;
 	cout << endl << "Ground_State  : " << endl;
 	for (int i = 0; i < dim_charge; i++)
-		cout << EigVe_charge(0,i) << endl;	
+		cout << EigVec_charge(0,i) << endl;	
 }

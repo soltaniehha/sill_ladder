@@ -54,6 +54,7 @@ int main()
 	return 0;
 }
 
+//diagonalize a symmetric matrix -- gives eigenvalues and eigenvectors using LAPACK library dsyev.
 void Diagonalize(int dim, Matrix<double> mat, Matrix<double> &evect, Vector<double> &eval)
 {
 	char jobz = 'V'; // V/N indicates that eigenvectors should/should not be calculated. 
@@ -93,9 +94,11 @@ void Diagonalize(int dim, Matrix<double> mat, Matrix<double> &evect, Vector<doub
 					evect(i,k) = evect(i+1,k);
 					evect(i+1,k) = temp;
 	      }
-	    }
+		}
 		
 	cout << " Diagonalization info " << info << " ************ " << endl << endl;
-	
+	//delete mts();
+	//delete vals;
+	//delete work;
 	
 } //End Diagonalization
