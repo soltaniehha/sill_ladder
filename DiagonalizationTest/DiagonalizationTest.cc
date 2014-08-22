@@ -2,7 +2,7 @@
 //============================================================================
 // Name        : DiagonalizationTest.cpp
 // Author      : Mohammad Soltanieh-ha
-// Description : Test
+// Description : A test for solving a matrix, using LAPACK pckage dsyev.
 //============================================================================
 
 #include <iostream>
