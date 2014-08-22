@@ -10,4 +10,4 @@ For technical details please look at our paper [M. Soltanieh-ha and A. E. Feigui
 
 ## Exact Diagonalization (ED) Test
 
-To make sure you have all the tools in order to reproduce our results you can check this c++ code that diagonalizes a symmetric real Hamiltonian. The code is in the folder DiagonalizationTest, and one need to have LAPACK/dsyev package and dmtk. Both packages can be found in the LAPACK and dmtk folders.
+To make sure you have all the tools in order to reproduce our results you can check these two c++ code that diagonalizes a symmetric real and complex Hamiltonian matix. The codes are located in the folder DiagonalizationTest, and one needs to have LAPACK/dsyev package and dmtk. Both packages can be found in the LAPACK and dmtk folders.
