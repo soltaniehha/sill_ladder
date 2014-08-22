@@ -1,6 +1,6 @@
 // g++ -o run real_DiagonalizationTest.cc -I/Users/mohammad/include -DWITH_LAPACK -lblas -llapack -g -O2
 //============================================================================
-// Name        : DiagonalizationTest.cpp
+// Name        : real_DiagonalizationTest.cc
 // Author      : Mohammad Soltanieh-ha
 // Description : A test for solving a real matrix, using LAPACK pckage dsyev.
 //============================================================================

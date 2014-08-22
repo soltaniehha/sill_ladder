@@ -1,6 +1,6 @@
 // g++ -o run_complex complex_DiagonalizationTest.cc -I/Users/mohammad/include -DWITH_LAPACK -lblas -llapack -g -O2
 //============================================================================
-// Name        : DiagonalizationTest.cpp
+// Name        : complex_DiagonalizationTest.cc
 // Author      : Mohammad Soltanieh-ha
 // Description : This program solves for the eigenvalues and, if desired, the eigenvectors for a complex Hamiltonian matrix H., using LAPACK pckage zgeev.
 //============================================================================
