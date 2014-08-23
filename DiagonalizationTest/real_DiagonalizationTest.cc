@@ -1,4 +1,4 @@
-// g++ -o run real_DiagonalizationTest.cc -I/Users/mohammad/include -DWITH_LAPACK -lblas -llapack -g -O2
+// g++ -o run_real.exe real_DiagonalizationTest.cc -I/Users/mohammad/include -DWITH_LAPACK -lblas -llapack -g -O2
 //============================================================================
 // Name        : real_DiagonalizationTest.cc
 // Author      : Mohammad Soltanieh-ha

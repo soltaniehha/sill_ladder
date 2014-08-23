@@ -1,4 +1,4 @@
-// g++ -o run_complex complex_DiagonalizationTest.cc -I/Users/mohammad/include -DWITH_LAPACK -lblas -llapack -g -O2
+// g++ -o run_complex.exe complex_DiagonalizationTest.cc -I/Users/mohammad/include -DWITH_LAPACK -lblas -llapack -g -O2
 //============================================================================
 // Name        : complex_DiagonalizationTest.cc
 // Author      : Mohammad Soltanieh-ha
