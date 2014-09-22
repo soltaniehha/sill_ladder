@@ -1,4 +1,4 @@
-// g++ -o run tj_ladder_entropy_overlap.cc -I/Users/mohammad/include -DWITH_LAPACK -lblas -llapack -g -O2 
+// g++ -o run.exe tj_ladder_entropy_overlap.cc -I/Users/mohammad/include -DWITH_LAPACK -lblas -llapack -g -O2 
 #include "math.h"
 #include <iostream>
 #include <iosfwd>
